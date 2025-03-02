@@ -84,11 +84,54 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+// Prismatic colormap - inspired by light dispersion through a prism with enhanced contrast
+vec3 prismatic(float t) {
+    // Use a mathematical formula to create a colormap with sharp transitions
+    // between pure spectral colors, reminiscent of light through a prism
+    
+    t = fract(t); // Ensure wrapping
+    float x = 6.0 * t; // 6 color segments
+    int i = int(x);
+    float f = x - float(i); // Fractional part
+    
+    // Apply ease function to create sharper transitions
+    f = 0.5 - 0.5 * cos(f * 3.14159);
+    
+    vec3 color;
+    
+    if (i == 0) {
+        // Red to Yellow
+        color = vec3(1.0, f, 0.0);
+    } else if (i == 1) {
+        // Yellow to Green
+        color = vec3(1.0 - f, 1.0, 0.0);
+    } else if (i == 2) {
+        // Green to Cyan
+        color = vec3(0.0, 1.0, f);
+    } else if (i == 3) {
+        // Cyan to Blue
+        color = vec3(0.0, 1.0 - f, 1.0);
+    } else if (i == 4) {
+        // Blue to Magenta
+        color = vec3(f, 0.0, 1.0);
+    } else {
+        // Magenta to Red
+        color = vec3(1.0, 0.0, 1.0 - f);
+    }
+    
+    // Add subtle luminance variation for more depth
+    float luminance = 0.9 + 0.1 * sin(t * 12.0);
+    color *= luminance;
+    
+    return color;
+}
+
 void main() {
-    // Create a color that cycles through hue values based on time
-    float hue = fract(uTime * uColorSpeed);
-    vec3 hsv = vec3(hue, 1.0, 1.0); // Full saturation and value
-    vec3 rgb = hsv2rgb(hsv);
+    // Create a color that cycles based on time
+    float t = fract(uTime * uColorSpeed);
+    
+    // Use the prismatic colormap instead of HSV
+    vec3 rgb = prismatic(t);
     
     // Set the fragment color to the computed RGB color with full opacity
     gl_FragColor = vec4(rgb, 1.0);
